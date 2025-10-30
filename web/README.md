@@ -1,0 +1,2 @@
+# Web folder
+This folder contains the web application code for the project. It includes all the necessary files and directories to run the web server, which will be held and coded in streamlit (python).
