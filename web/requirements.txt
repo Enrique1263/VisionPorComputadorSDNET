@@ -1,0 +1,13 @@
+streamlit
+Pillow
+numpy
+# Optional frameworks (install one if you plan to use a real trained model)
+# PyTorch (recommended for many local setups)
+torch
+torchvision
+# Or TensorFlow / Keras
+#tensorflow
+
+# Notes:
+# - Installing both PyTorch and TensorFlow is not necessary; uncomment the one you need.
+# - On Windows, follow the official installation instructions for PyTorch to get the correct CUDA build if using a GPU.
