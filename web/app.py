@@ -33,10 +33,12 @@ def list_model_files():
 def try_load_torch_model(path):
     try:
         import torch
-        model = torch.load(path, map_location=torch.device('cpu'))
+        import torchvision
+        model = torch.load(path, map_location=torch.device('cpu'), weights_only=False)
         model.eval()
         return ('torch', model)
-    except Exception:
+    except Exception as e:
+        st.error(f"Error detallado al cargar PyTorch: {e}")
         return (None, None)
 
 
@@ -56,26 +58,46 @@ def heuristic_predict(img: Image.Image):
 def predict_with_torch(model, img: Image.Image):
     import torch
     from torchvision import transforms
+    
+    # Transformación estándar para EfficientNet
     transform = transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
+    
+    # Preparamos la imagen (añadimos dimensión de batch: [1, 3, 224, 224])
     x = transform(img.convert('RGB')).unsqueeze(0)
+    
     with torch.no_grad():
         out = model(x)
+        
+        # Si la salida es una lista/tupla (pasa a veces), cogemos el primer elemento
         if isinstance(out, (list, tuple)):
             out = out[0]
-        probs = torch.softmax(out.squeeze(), dim=0).cpu().numpy()
-    # assume binary class [non-cracked, cracked] or [cracked, non-cracked]
-    if probs.size == 1:
-        prob_cracked = float(probs[0])
+            
+        # Aplicamos Softmax para obtener porcentajes
+        # dim=1 asegura que funciona aunque el batch sea 1
+        probs = torch.nn.functional.softmax(out, dim=1)
+        
+        # Convertimos a numpy (array de 2 elementos)
+        probs_np = probs.cpu().numpy()[0]
+
+    # --- LÓGICA DE CLASIFICACIÓN ---
+    pred_index = probs_np.argmax()
+    confidence = float(probs_np[pred_index])
+    
+    if pred_index == 0: 
+        label = "Cracked"
+        prob_cracked = confidence
     else:
-        # choose the index with higher probability as 'cracked'
-        prob_cracked = float(probs.max())
-    label = "Cracked" if prob_cracked > 0.5 else "Non-cracked"
-    return label, prob_cracked
+        label = "Non-cracked"
+        prob_cracked = 1.0 - confidence
+    prob_crack_val = float(probs_np[1])
+    label = "Cracked" if prob_crack_val > 0.5 else "Non-cracked"
+    
+    return label, prob_crack_val
 
 
 files = list_model_files()
@@ -112,7 +134,7 @@ if uploaded is not None:
     if label == 'Cracked':
         st.success("Model indicates the image likely contains a crack.")
     else:
-        st.info("Model indicates the image likely does not contain a visible crack.")
+        st.info("Model indicates the image likely does not contain a crack.")
 
     st.markdown("---")
     st.markdown("If you have a trained model, place it in the `models/` directory and select it above. The app attempts to load PyTorch (`.pt`, `.pth`) models. If not available, a simple edge-density heuristic is used so you can test the UI locally.")
