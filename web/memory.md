@@ -1,7 +1,3 @@
-# Test
-
-![Test image](../images/Cracked.jpeg)
-
 # Project Memory — VisionPorComputadorSDNET
 
 This file is a short, blog-like memory of the project as it evolved. It documents major decisions, experiments, and milestones so the project's path is clear.
@@ -17,21 +13,21 @@ This file is a short, blog-like memory of the project as it evolved. It document
 
 We have created a Neural Network that detects if an image from SDNET is cracked or not cracked. In our first trials we can observe and accuracy of around 0.93%. We will be working on improving this model.
 
-![Progreso](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/a5e1695a53402567410f361f88717895f984b84a/images/ProgresoTraining.jpeg)
+![Progreso](../images/ProgresoTraining.jpeg)
 
 Using this code we where able to detect cracks, as illusteated in the following images.
 
 - **Cracked** 
 
-![Cracked](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/76bffb4f45b9487861c83fb1294e6bd16b0bf05a/images/Cracked.jpeg)
+![Cracked](../images/Cracked.jpeg)
 
-![Prediction](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/5193cb7955616b45cc8164dc7800f0e9c39df237/images/predictionCracked.jpeg)
+![Prediction](../images/predictionCracked.jpeg)
 
 - **UnCracked**
 
-![Uncracked](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/5193cb7955616b45cc8164dc7800f0e9c39df237/images/Uncraacked.jpeg)
+![Uncracked](../images/Uncraacked.jpeg)
 
-![Prediction](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/5193cb7955616b45cc8164dc7800f0e9c39df237/images/predictionUncracked.jpeg)
+![Prediction](../images/predictionUncracked.jpeg)
 
 ## Notes & Future Work
 
