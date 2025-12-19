@@ -19,7 +19,7 @@ Using this code we where able to detect cracks, as illusteated in the following 
 
 - **Cracked** 
 
-![Cracked]([https://github.com/Enrique1263/VisionPorComputadorSDNET/images/Cracked.jpeg](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/76bffb4f45b9487861c83fb1294e6bd16b0bf05a/images/Cracked.jpeg))
+![Cracked](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/76bffb4f45b9487861c83fb1294e6bd16b0bf05a/images/Cracked.jpeg)
 
 ![Prediction](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/predictionCracked.jpeg)
 
