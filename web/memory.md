@@ -13,8 +13,21 @@ This file is a short, blog-like memory of the project as it evolved. It document
 
 We have created a Neural Network that detects if an image from SDNET is cracked or not cracked. In our first trials we can observe and accuracy of around 0.93%. We will be working on improving this model.
 
-![alt text](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/ProgresoTraingin.jpeg)
+![Progreso](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/ProgresoTraining.jpeg)
 
+Using this code we where able to detect cracks, as illusteated in the following images.
+
+- **Cracked** 
+
+![Cracked](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/Cracked.jpeg)
+
+![Prediction](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/predictionCracked.jpeg)
+
+- **UnCracked**
+
+![Uncracked](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/Uncraacked.jpeg)
+
+![Prediction](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/predictionUncracked.jpeg)
 
 ## Notes & Future Work
 
