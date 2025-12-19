@@ -22,7 +22,7 @@ The dataset is split into:
 
 -**15% testing**
 
-Using a shuffled sample list before splitting ensures that performance metrics reflect generalization and not memorization.
+Using a sample before splitting ensures that performance metrics reflect generalization and not memorization.
 
 ![Progreso](../images/ProgresoTraining.jpeg)
 
