@@ -44,6 +44,10 @@ Using this code we where able to detect cracks, as illusteated in the following 
 
 1. Use classical computer vision techniques for pre or post processing allowing for more accurate results.
 
+   In this sense we've begun to use thresholding and we expect to be able to use it to improve our model.
+
+   ![Umbralizado](../images/Umbralizado.jpeg)
+
 1. Train other models in order to compare and verify wich one has greater accuracy.
 
 1. Submit a full report on the model, website and classical techniques used for the development of this project.
