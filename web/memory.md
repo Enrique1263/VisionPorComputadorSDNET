@@ -21,13 +21,13 @@ Using this code we where able to detect cracks, as illusteated in the following 
 
 ![Cracked](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/76bffb4f45b9487861c83fb1294e6bd16b0bf05a/images/Cracked.jpeg)
 
-![Prediction](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/predictionCracked.jpeg)
+![Prediction](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/5193cb7955616b45cc8164dc7800f0e9c39df237/images/predictionCracked.jpeg)
 
 - **UnCracked**
 
-![Uncracked](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/Uncraacked.jpeg)
+![Uncracked](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/5193cb7955616b45cc8164dc7800f0e9c39df237/images/Uncraacked.jpeg)
 
-![Prediction](https://github.com/Enrique1263/VisionPorComputadorSDNET/images/predictionUncracked.jpeg)
+![Prediction](https://github.com/Enrique1263/VisionPorComputadorSDNET/blob/5193cb7955616b45cc8164dc7800f0e9c39df237/images/predictionUncracked.jpeg)
 
 ## Notes & Future Work
 
