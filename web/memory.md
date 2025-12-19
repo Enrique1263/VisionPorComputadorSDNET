@@ -1,3 +1,7 @@
+# Test
+
+![Test image](../images/Cracked.jpeg)
+
 # Project Memory — VisionPorComputadorSDNET
 
 This file is a short, blog-like memory of the project as it evolved. It documents major decisions, experiments, and milestones so the project's path is clear.
