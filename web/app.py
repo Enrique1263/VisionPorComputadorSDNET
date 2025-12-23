@@ -5,6 +5,14 @@ from pathlib import Path
 import io
 import os
 
+try:
+    from pytorch_grad_cam import GradCAM
+    from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+    from pytorch_grad_cam.utils.image import show_cam_on_image
+    GRAD_CAM_AVAILABLE = True
+except ImportError:
+    GRAD_CAM_AVAILABLE = False
+
 st.set_page_config(page_title="Crack Detection — Demo", layout="centered")
 
 st.title("Crack Detection — Project Memory & Demo")
@@ -22,18 +30,17 @@ st.markdown("Upload an image to test the model or use the heuristic fallback if 
 
 MODEL_DIR = Path(__file__).resolve().parents[1] / "models"
 
-
 def list_model_files():
     if not MODEL_DIR.exists():
         return []
     return [p.name for p in MODEL_DIR.iterdir() if p.is_file()]
-
 
 @st.cache_resource
 def try_load_torch_model(path):
     try:
         import torch
         import torchvision
+        # weights_only=False es necesario para modelos guardados completos
         model = torch.load(path, map_location=torch.device('cpu'), weights_only=False)
         model.eval()
         return ('torch', model)
@@ -41,25 +48,21 @@ def try_load_torch_model(path):
         st.error(f"Error detallado al cargar PyTorch: {e}")
         return (None, None)
 
-
 def heuristic_predict(img: Image.Image):
     # Very lightweight proxy: edge density
     gray = ImageOps.grayscale(img)
     edges = gray.filter(ImageFilter.FIND_EDGES)
     arr = np.array(edges)
-    # normalize to 0-1
     val = (arr > 30).mean()
-    # map value to probability that image is cracked (higher edge density -> more likely cracked)
     prob = float(np.clip((val - 0.03) / 0.15, 0.0, 1.0))
     label = "Cracked" if prob > 0.5 else "Non-cracked"
-    return label, prob
-
+    return label, prob, None
 
 def predict_with_torch(model, img: Image.Image):
     import torch
     from torchvision import transforms
     
-    # Transformación estándar para EfficientNet
+    # --- PREPROCESAMIENTO ---
     transform = transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
@@ -67,80 +70,131 @@ def predict_with_torch(model, img: Image.Image):
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
     
-    # Preparamos la imagen (añadimos dimensión de batch: [1, 3, 224, 224])
-    x = transform(img.convert('RGB')).unsqueeze(0)
+    # Guardamos la imagen transformada para pasarla luego a GradCAM
+    x_tensor = transform(img.convert('RGB')).unsqueeze(0)
     
     with torch.no_grad():
-        out = model(x)
-        
-        # Si la salida es una lista/tupla (pasa a veces), cogemos el primer elemento
+        out = model(x_tensor)
         if isinstance(out, (list, tuple)):
             out = out[0]
             
-        # Aplicamos Softmax para obtener porcentajes
-        # dim=1 asegura que funciona aunque el batch sea 1
-        probs = torch.nn.functional.softmax(out, dim=1)
-        
-        # Convertimos a numpy (array de 2 elementos)
-        probs_np = probs.cpu().numpy()[0]
+        # Para modelo binario con BCEWithLogitsLoss, usar sigmoid
+        prob_cracked = torch.sigmoid(out).item()
 
     # --- LÓGICA DE CLASIFICACIÓN ---
-    pred_index = probs_np.argmax()
-    confidence = float(probs_np[pred_index])
+    # Modelo binario: >0.5 es Cracked, <=0.5 es Non-cracked
+    label = "Cracked" if prob_cracked > 0.5 else "Non-cracked"
     
-    if pred_index == 0: 
-        label = "Cracked"
-        prob_cracked = confidence
-    else:
-        label = "Non-cracked"
-        prob_cracked = 1.0 - confidence
-    prob_crack_val = float(probs_np[1])
-    label = "Cracked" if prob_crack_val > 0.5 else "Non-cracked"
-    
-    return label, prob_crack_val
+    return label, prob_cracked, x_tensor
 
+def explain_with_gradcam(model, input_tensor, original_img):
+    """
+    Genera el mapa de calor Grad-CAM
+    """
+    if not GRAD_CAM_AVAILABLE:
+        return None
+
+    import torch
+    
+    # 1. Identificar la capa objetivo.
+    # TODO: Mejorar para más arquitecturas
+    try:
+        target_layers = [model.features[-1]]
+    except AttributeError:
+        try:
+            target_layers = [model.layer4[-1]]
+        except AttributeError:
+            st.warning("No se pudo identificar la capa convolucional automáticamente para GradCAM.")
+            return None
+
+    # 2. Inicializar GradCAM
+    cam = GradCAM(model=model, target_layers=target_layers)
+
+    # 3. Generar el mapa (Targets=None apunta a la clase con mayor probabilidad automáticamente)
+    grayscale_cam = cam(input_tensor=input_tensor, targets=None)
+
+    # 4. Preparar imagen de fondo para superponer
+    # GradCAM necesita la imagen normalizada entre 0 y 1 y del mismo tamaño que el tensor (224x224)
+    rgb_img = original_img.convert("RGB").resize((224, 224))
+    rgb_img = np.float32(rgb_img) / 255
+    
+    # 5. Crear superposición
+    visualization = show_cam_on_image(rgb_img, grayscale_cam[0, :], use_rgb=True)
+    return visualization
+
+# --- UI PRINCIPAL ---
 
 files = list_model_files()
 sel = st.selectbox("Model file in `models/` (leave blank to use heuristic)", [""] + files)
 
 loaded = None
 loader_type = None
+
 if sel:
     model_path = MODEL_DIR / sel
     loader_type, loaded = try_load_torch_model(str(model_path))
     if loader_type is None:
-        st.warning("Could not load selected model (unsupported format or missing deps). Using heuristic.")
+        st.warning("Could not load selected model. Using heuristic.")
 
 uploaded = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg", "bmp"])
 
 if uploaded is not None:
     img = Image.open(io.BytesIO(uploaded.read()))
-    st.image(img, caption="Uploaded image", use_column_width=True)
+    
+    # Columnas para mostrar antes/después si hay GradCAM
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.image(img, caption="Original Image", use_container_width=True)
+
+    input_tensor = None
 
     if loaded is not None and loader_type == 'torch':
         try:
-            label, prob = predict_with_torch(loaded, img)
+            label, prob, input_tensor = predict_with_torch(loaded, img)
         except Exception as e:
             st.error(f"Error during PyTorch inference: {e}")
-            label, prob = heuristic_predict(img)
+            label, prob, input_tensor = heuristic_predict(img)
     else:
-        label, prob = heuristic_predict(img)
+        label, prob, input_tensor = heuristic_predict(img)
 
     st.markdown("---")
-    st.subheader("Prediction")
-    st.write(f"**Label:** {label}")
-    st.write(f"**Confidence:** {prob:.2f}")
+    st.subheader("Prediction Result")
+    
+    # Métricas visuales
+    metric_col1, metric_col2 = st.columns(2)
+    metric_col1.metric("Label", label)
+    metric_col2.metric("Probability (Cracked)", f"{prob:.2%}")
 
     if label == 'Cracked':
-        st.success("Model indicates the image likely contains a crack.")
+        st.error("⚠️ Model detects a crack.")
     else:
-        st.info("Model indicates the image likely does not contain a crack.")
+        st.success("✅ No crack detected.")
+
+    # --- SECCIÓN GRAD-CAM ---
+    if input_tensor is not None and GRAD_CAM_AVAILABLE:
+        st.markdown("---")
+        st.subheader("Visual Explanation (Grad-CAM)")
+        st.write("Heatmap highlights the regions influencing the model's decision.")
+        
+        # Generar visualización
+        cam_image = explain_with_gradcam(loaded, input_tensor, img)
+        
+        if cam_image is not None:
+            with col2:
+                st.image(cam_image, caption="Model Attention (Heatmap)", use_container_width=True)
+        else:
+            with col2:
+                st.info("Grad-CAM visualization not available for this architecture.")
+    
+    elif input_tensor is not None and not GRAD_CAM_AVAILABLE:
+        st.info("Install `grad-cam` via pip to see visual explanations.")
 
     st.markdown("---")
-    st.markdown("If you have a trained model, place it in the `models/` directory and select it above. The app attempts to load PyTorch (`.pt`, `.pth`) models. If not available, a simple edge-density heuristic is used so you can test the UI locally.")
+    st.markdown("If you have a trained model, place it in the `models/` directory.")
 
 else:
-    st.info("Upload an image to see predictions. Or place a model in `models/` and select it above.")
+    st.info("Upload an image to see predictions.")
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("App created for local testing. To deploy, push to a GitHub repo and use Streamlit Community Cloud or another hosting service.")
+st.sidebar.markdown("App created for local testing.")

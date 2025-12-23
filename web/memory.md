@@ -24,21 +24,21 @@ The dataset is split into:
 
 Using a sample before splitting ensures that performance metrics reflect generalization and not memorization.
 
-![Progreso](../images/ProgresoTraining.jpeg)
+![Progreso](images/ProgresoTraining.jpeg)
 
 Using this code we where able to detect cracks, as illusteated in the following images.
 
 - **Cracked** 
 
-![Cracked](../images/Cracked.jpeg)
+![Cracked](images/Cracked.jpeg)
 
-![Prediction](../images/predictionCracked.jpeg)
+![Prediction](images/predictionCracked.jpeg)
 
 - **UnCracked**
 
-![Uncracked](../images/Uncraacked.jpeg)
+![Uncracked](images/Uncraacked.jpeg)
 
-![Prediction](../images/predictionUncracked.jpeg)
+![Prediction](images/predictionUncracked.jpeg)
 
 ###  Next Steps
 
@@ -46,7 +46,7 @@ Using this code we where able to detect cracks, as illusteated in the following 
 
    In this sense we've begun to use thresholding and we expect to be able to use it to improve our model.
 
-   ![Umbralizado](../images/Umbralizado.jpeg)
+   ![Umbralizado](images/Umbralizado.jpeg)
 
 1. Train other models in order to compare and verify wich one has greater accuracy.
 

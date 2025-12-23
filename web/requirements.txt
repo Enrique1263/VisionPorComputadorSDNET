@@ -5,6 +5,7 @@ numpy
 # PyTorch (recommended for many local setups)
 torch
 torchvision
+grad-cam
 # Or TensorFlow / Keras
 #tensorflow
 
