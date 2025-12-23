@@ -4,6 +4,8 @@ import numpy as np
 from pathlib import Path
 import io
 import os
+import base64
+import re
 
 try:
     from pytorch_grad_cam import GradCAM
@@ -17,10 +19,34 @@ st.set_page_config(page_title="Crack Detection — Demo", layout="centered")
 
 st.title("Crack Detection — Project Memory & Demo")
 
+def img_to_bytes(img_path):
+    img_bytes = Path(img_path).read_bytes()
+    encoded = base64.b64encode(img_bytes).decode()
+    return encoded
+
+def replace_images_in_markdown(markdown_text, base_path):
+    pattern = r'!\[(.*?)\]\((.*?)\)'
+    
+    def replace_match(match):
+        alt_text = match.group(1)
+        rel_path = match.group(2)
+        full_path = base_path / rel_path
+        
+        if full_path.exists():
+            mime_type = "image/png" if full_path.suffix.lower() == '.png' else "image/jpeg"
+            img_b64 = img_to_bytes(full_path)
+            return f'<img src="data:{mime_type};base64,{img_b64}" alt="{alt_text}" style="max-width: 100%;">'
+        else:
+            return match.group(0)
+
+    return re.sub(pattern, replace_match, markdown_text)
+
 # Show project memory (primary content)
 mem_path = Path(__file__).parent / "memory.md"
 if mem_path.exists():
-    st.markdown(mem_path.read_text())
+    md_content = mem_path.read_text(encoding='utf-8')
+    processed_md = replace_images_in_markdown(md_content, mem_path.parent)
+    st.markdown(processed_md, unsafe_allow_html=True)
 else:
     st.info("No `memory.md` found. You can add notes to `web/memory.md`.")
 
