@@ -14,6 +14,13 @@ import io
 import os
 import base64
 import re
+import src
+from src.resnet18_binary import ResNet18Binary
+from src.cnn_crack_custom import CrackCNNCustom
+
+sys.modules['models'] = src
+sys.modules['models.cnn_crack_custom'] = src.cnn_crack_custom
+sys.modules['models.resnet18_binary'] = src.resnet18_binary
 
 try:
     from pytorch_grad_cam import GradCAM
@@ -67,7 +74,7 @@ MODEL_DIR = Path(__file__).resolve().parents[1] / "models"
 def list_model_files():
     if not MODEL_DIR.exists():
         return []
-    return [p.name for p in MODEL_DIR.iterdir() if p.is_file()]
+    return [p.name for p in MODEL_DIR.iterdir() if p.is_file() and p.suffix == '.pth']
 
 @st.cache_resource
 def try_load_torch_model(path):
@@ -179,7 +186,7 @@ if uploaded is not None:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.image(img, caption="Original Image", use_container_width=True)
+        st.image(img, caption="Original Image", width='stretch')
 
     input_tensor = None
 
@@ -216,7 +223,7 @@ if uploaded is not None:
         
         if cam_image is not None:
             with col2:
-                st.image(cam_image, caption="Model Attention (Heatmap)", use_container_width=True)
+                st.image(cam_image, caption="Model Attention (Heatmap)", width='stretch')
         else:
             with col2:
                 st.info("Grad-CAM visualization not available for this architecture.")
