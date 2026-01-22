@@ -5,6 +5,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT))
 
+import cv2
 
 import streamlit as st
 from PIL import Image, ImageFilter, ImageOps
@@ -89,15 +90,67 @@ def try_load_torch_model(path):
         st.error(f"Error detallado al cargar PyTorch: {e}")
         return (None, None)
 
-def heuristic_predict(img: Image.Image):
-    # Very lightweight proxy: edge density
-    gray = ImageOps.grayscale(img)
-    edges = gray.filter(ImageFilter.FIND_EDGES)
-    arr = np.array(edges)
-    val = (arr > 30).mean()
-    prob = float(np.clip((val - 0.03) / 0.15, 0.0, 1.0))
-    label = "Cracked" if prob > 0.5 else "Non-cracked"
-    return label, prob, None
+def heuristic_predict(img: Image.Image,
+                        min_length=10,
+                        min_elongation=2,
+                        max_bbox_ratio=6,
+                        min_area=10):
+    """Classify image as Cracked or Non-cracked using connected component analysis on Canny edges"""
+    if img is None:
+        return None
+    
+    # Convert PIL Image to grayscale numpy array
+    npimg = cv2.cvtColor(np.array(img.convert('L')), cv2.COLOR_GRAY2BGR)
+    npimg = cv2.cvtColor(npimg, cv2.COLOR_BGR2GRAY)
+    
+    # Canny edge detection
+    canny = cv2.Canny(npimg, 50, 150)
+    
+    # Morphological operations to clean and connect
+    kernel = np.ones((3, 3), np.uint8)
+    canny = cv2.morphologyEx(canny, cv2.MORPH_CLOSE, kernel, iterations=2)
+    canny = cv2.morphologyEx(canny, cv2.MORPH_OPEN, kernel, iterations=1)
+    
+    # Connected components analysis
+    num_labels, labels_map, stats, centroids = cv2.connectedComponentsWithStats(canny)
+    
+    # Extract crack-like features from components
+    crack_objects = 0
+    total_length = 0.0
+    crack_mask = np.zeros_like(canny, dtype=np.uint8)
+    
+    for i in range(1, num_labels):  # 0 = background
+        area = stats[i, cv2.CC_STAT_AREA]
+        w = stats[i, cv2.CC_STAT_WIDTH]
+        h = stats[i, cv2.CC_STAT_HEIGHT]
+        
+        if w == 0 or h == 0:
+            continue
+        
+        elongation = max(w, h) / (min(w, h) + 1e-6)
+        bbox_ratio = area / (w * h + 1e-6)
+        length = max(w, h)
+        
+        # Detect crack-like components
+        is_crack_like = (
+            length > min_length and
+            elongation > min_elongation and
+            area > min_area and
+            bbox_ratio < max_bbox_ratio
+        )
+        
+        if is_crack_like:
+            crack_objects += 1
+            total_length += length
+            crack_mask[labels_map == i] = 255
+    
+    # Classification decision
+    if crack_objects >= 1 and total_length > 50:
+        label = "Cracked"
+    else:
+        label = "Non-cracked"
+    prob = min(1.0, total_length / 200.0)
+    return label, prob, crack_mask
 
 def predict_with_torch(model, img: Image.Image):
     import torch
@@ -163,6 +216,32 @@ def explain_with_gradcam(model, input_tensor, original_img):
     visualization = show_cam_on_image(rgb_img, grayscale_cam[0, :], use_rgb=True)
     return visualization
 
+def explain_with_canny(crack_mask, original_img):
+    """
+    Visualiza las líneas detectadas por Canny superpuestas en la imagen original
+    """
+    # Redimensionar la máscara al tamaño original de la imagen
+    mask_resized = cv2.resize(crack_mask, (original_img.width, original_img.height))
+    
+    # Convertir imagen original a numpy array
+    rgb_img = np.array(original_img.convert("RGB"))
+    
+    # Normalizar para visualización
+    rgb_img_normalized = np.float32(rgb_img) / 255
+    
+    # Crear una máscara coloreada (rojo para las líneas detectadas)
+    colored_mask = np.zeros_like(rgb_img, dtype=np.float32)
+    colored_mask[:, :, 0] = mask_resized / 255.0  # Canal rojo
+    
+    # Combinar con la imagen original
+    alpha = 0.6
+    visualization = rgb_img_normalized * (1 - alpha) + colored_mask * alpha
+    
+    # Convertir a uint8 para visualización
+    visualization = (visualization * 255).astype(np.uint8)
+    
+    return visualization
+
 # --- UI PRINCIPAL ---
 
 files = list_model_files()
@@ -189,15 +268,16 @@ if uploaded is not None:
         st.image(img, caption="Original Image", width='stretch')
 
     input_tensor = None
+    crack_mask = None
 
     if loaded is not None and loader_type == 'torch':
         try:
             label, prob, input_tensor = predict_with_torch(loaded, img)
         except Exception as e:
             st.error(f"Error during PyTorch inference: {e}")
-            label, prob, input_tensor = heuristic_predict(img)
+            label, prob, crack_mask = heuristic_predict(img)
     else:
-        label, prob, input_tensor = heuristic_predict(img)
+        label, prob, crack_mask = heuristic_predict(img)
 
     st.markdown("---")
     st.subheader("Prediction Result")
@@ -212,7 +292,7 @@ if uploaded is not None:
     else:
         st.success("✅ No crack detected.")
 
-    # --- SECCIÓN GRAD-CAM ---
+    # --- SECCIÓN GRAD-CAM / CANNY ---
     if input_tensor is not None and GRAD_CAM_AVAILABLE:
         st.markdown("---")
         st.subheader("Visual Explanation (Grad-CAM)")
@@ -227,6 +307,18 @@ if uploaded is not None:
         else:
             with col2:
                 st.info("Grad-CAM visualization not available for this architecture.")
+    
+    elif crack_mask is not None:
+        st.markdown("---")
+        st.subheader("Visual Explanation (Canny Edge Detection)")
+        st.write("Red overlay shows the edges detected by Canny algorithm used to classify the image.")
+        
+        # Generar visualización de Canny
+        canny_visualization = explain_with_canny(crack_mask, img)
+        
+        if canny_visualization is not None:
+            with col2:
+                st.image(canny_visualization, caption="Detected Crack Lines (Canny)", width='stretch')
     
     elif input_tensor is not None and not GRAD_CAM_AVAILABLE:
         st.info("Install `grad-cam` via pip to see visual explanations.")
