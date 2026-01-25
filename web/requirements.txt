@@ -1,14 +1,12 @@
 streamlit
 Pillow
 numpy
-# Optional frameworks (install one if you plan to use a real trained model)
-# PyTorch (recommended for many local setups)
+# --- ML Frameworks (Necesarios para la demo en la nube) ---
 torch
 torchvision
 grad-cam
-# Or TensorFlow / Keras
-#tensorflow
-
-# Notes:
-# - Installing both PyTorch and TensorFlow is not necessary; uncomment the one you need.
-# - On Windows, follow the official installation instructions for PyTorch to get the correct CUDA build if using a GPU.
+# --- Procesamiento de imagen (CRÍTICO: Versión headless para servidores) ---
+opencv-python-headless
+# --- Utilidades extra ---
+pandas
+matplotlib
