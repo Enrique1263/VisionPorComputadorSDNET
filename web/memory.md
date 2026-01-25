@@ -39,13 +39,13 @@ We divided the project into four main parts or "Deliverables." Each one has a sp
 
 The chart below shows how the tasks are grouped under each deliverable. This helps us see the structure of our work.
 
-![Organization chart of the tasks](Images/FlowMermaid.png)
+![Organization chart of the tasks](images/FlowMermaid.png)
 
 #### Gantt Diagram
 
 We use a Gantt chart to track the dates and make sure we finish on time. The chart below shows the weekly schedule. We can see that in November, we start working on the website and the AI model at the same time to save time.
 
-![Project Gantt Chart (October 2025 -- January 2026)](Images/ProyVisionGannt_rotated_cropped.pdf)
+![Project Gantt Chart (October 2025 -- January 2026)](images/ProyVisionGannt_rotated_cropped.pdf)
 
 
 ## Methodology
@@ -359,14 +359,3 @@ Using this code we where able to detect cracks, as illusteated in the following 
 1. Train other models in order to compare and verify wich one has greater accuracy.
 
 1. Submit a full report on the model, website and classical techniques used for the development of this project.
-
-## Notes & Future Work
-
-- Add more model-agnostic preprocessing to the web app so it can accept different input sizes and color channels.
-- Create an automated CI step to export model artifacts to `models/` and version them.
-- Add explanations / Grad-CAM visualizations to show which image regions the model used for predictions.
-
-## How I used this file
-
-Use this file to jot short notes about experiments, dates, or decisions. When deploying, copy selected entries into the public project blog or release notes.
-
