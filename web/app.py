@@ -31,9 +31,9 @@ try:
 except ImportError:
     GRAD_CAM_AVAILABLE = False
 
-st.set_page_config(page_title="Crack Detection — Demo", layout="centered")
+st.set_page_config(page_title="Crack Detection", layout="centered")
 
-st.title("Crack Detection — Project Memory & Demo")
+st.title("Crack Detection Project")
 
 def img_to_bytes(img_path):
     img_bytes = Path(img_path).read_bytes()
@@ -191,7 +191,6 @@ def explain_with_gradcam(model, input_tensor, original_img):
     import torch
     
     # 1. Identificar la capa objetivo.
-    # TODO: Mejorar para más arquitecturas
     try:
         target_layers = [model.features[-1]]
     except AttributeError:
@@ -245,12 +244,12 @@ def explain_with_canny(crack_mask, original_img):
 # --- UI PRINCIPAL ---
 
 files = list_model_files()
-sel = st.selectbox("Model file in `models/` (leave blank to use heuristic)", [""] + files)
+sel = st.selectbox("Model file in `models/`", ["Canny Edge detection"] + files)
 
 loaded = None
 loader_type = None
 
-if sel:
+if sel not in ["Canny Edge detection"]:
     model_path = MODEL_DIR / sel
     loader_type, loaded = try_load_torch_model(str(model_path))
     if loader_type is None:
@@ -330,4 +329,4 @@ else:
     st.info("Upload an image to see predictions.")
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("App created for local testing.")
+st.sidebar.markdown("App created for crack detection")
