@@ -1,4 +1,3 @@
-
 import sys
 from pathlib import Path
 
@@ -330,3 +329,16 @@ else:
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("App created for crack detection")
+try:
+    import qrcode
+    from PIL import Image
+    
+    url = "https://visionporcomputadorsdnet-9ztpaoqnxqzqyfarurrtvs.streamlit.app/"
+    qr = qrcode.QRCode(box_size=4, border=2)
+    qr.add_data(url)
+    qr.make(fit=True)
+    img_qr = qr.make_image(fill_color="black", back_color="white")
+    
+    st.sidebar.image(img_qr.get_image(), caption="Scan to open on mobile")
+except ImportError:
+    pass
