@@ -1,9 +1,12 @@
 streamlit
+Pillow
+numpy
+# --- ML Frameworks (Necesarios para la demo en la nube) ---
 torch
 torchvision
-numpy
-pillow
-opencv-python-headless
 grad-cam
+# --- Procesamiento de imagen (CRÍTICO: Versión headless para servidores) ---
+opencv-python-headless
+# --- Utilidades extra ---
 pandas
 matplotlib
