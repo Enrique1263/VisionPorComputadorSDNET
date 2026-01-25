@@ -10,3 +10,4 @@ opencv-python-headless
 # --- Utilidades extra ---
 pandas
 matplotlib
+qrcode[pil]
