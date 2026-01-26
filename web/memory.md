@@ -70,17 +70,22 @@ In order to compare the different methods we use to classify samples of SDNET as
 
 - To evaluate the sensitive aspect of our tools (the ability to accurately recognize a cracked image as such), the first metric of interest is the frequency of true positives: the positive predictive value (PPV):
 
-\[
-\text{Sensitivity} = \frac{\text{TrueCracked}}{\text{TrueCracked} + \text{FalseUncracked}} = \frac{\text{TrueCracked}}{\text{ActuallyCracked}}
-\]
+$$
+\text{Precision}_{\text{category}} =
+\frac{\text{TrueCracked}_{\text{category}} + \text{TrueUncracked}_{\text{category}}}
+{|\text{Category}|}
+$$
+
 
 But sensitivity alone is not enough to guarantee a good classifier: a tool that labels all images as Cracked would yield maximum sensitivity.
 
 - We also need to consider the overall precision of the tools we develop. It can be useful to separate this precision according to the different categories:
 
-\[
-\text{Precision}_{\text{category}} = \frac{\text{TrueCracked}_{\text{category}} + \text{TrueUncracked}_{\text{category}}}{|\text{Category}|}
-\]
+$$
+\text{Precision}_{\text{category}} =
+\frac{\text{TrueCracked}_{\text{category}} + \text{TrueUncracked}_{\text{category}}}
+{|\text{Category}|}
+$$
 
 However, the asymmetry of the dataset used (SDNET 2018, see Section on Dataset) with only 30% of the images actually being cracked means that focusing on this 30% might lower the precision of the classifier on the other 70% of the dataset.
 
