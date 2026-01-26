@@ -45,7 +45,7 @@ The chart below shows how the tasks are grouped under each deliverable. This hel
 
 We use a Gantt chart to track the dates and make sure we finish on time. The chart below shows the weekly schedule. We can see that in November, we start working on the website and the AI model at the same time to save time.
 
-![Project Gantt Chart (October 2025 -- January 2026)](images/ProyVisionGannt_rotated_cropped.pdf)
+![Project Gantt Chart (October 2025 -- January 2026)](images/ProyVisionGannt_rotated_cropped.jpg)
 
 
 ## Methodology
